@@ -91,7 +91,7 @@ func ContainerInit() {
 	// Step 5: CLONE_NEWPID requires a fork — the calling process itself does NOT
 	// enter the new PID namespace; only its children do. So we fork here.
 	// The parent (original child) waits for the forked grandchild.
-	grandchild, _, errno := syscall.RawSyscall(syscall.SYS_FORK, 0, 0, 0)
+	grandchild, _, errno := syscall.RawSyscall(syscall.SYS_CLONE, uintptr(syscall.SIGCHLD), 0, 0)
 	if errno != 0 {
 		fmt.Fprintf(os.Stderr, "init: fork: %v\n", errno)
 		os.Exit(127)
