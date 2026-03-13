@@ -25,12 +25,14 @@ func NewServer() *Server {
 }
 
 func (s *Server) routes() {
-	// System
+	
+
 	s.handle("GET /_ping", s.handlers.Ping)
 	s.handle("GET /version", s.handlers.Version)
 	s.handle("GET /info", s.handlers.Info)
 
-	// Containers
+	
+
 	s.handle("GET /containers/json", s.handlers.ContainerList)
 	s.handle("POST /containers/create", s.handlers.ContainerCreate)
 	s.handle("GET /containers/{id}/json", s.handlers.ContainerInspect)
@@ -49,7 +51,8 @@ func (s *Server) routes() {
 	s.handle("POST /containers/{id}/unpause", s.handlers.ContainerUnpause)
 	s.handle("GET /containers/{id}/changes", s.handlers.ContainerChanges)
 
-	// Images
+	
+
 	s.handle("GET /images/json", s.handlers.ImageList)
 	s.handle("POST /images/create", s.handlers.ImageCreate)
 	s.handle("GET /images/{name}/json", s.handlers.ImageInspect)
@@ -58,7 +61,8 @@ func (s *Server) routes() {
 	s.handle("POST /images/prune", s.handlers.ImagePrune)
 	s.handle("GET /images/search", s.handlers.ImageSearch)
 
-	// Networks
+	
+
 	s.handle("GET /networks", s.handlers.NetworkList)
 	s.handle("POST /networks/create", s.handlers.NetworkCreate)
 	s.handle("GET /networks/{id}", s.handlers.NetworkInspect)
@@ -67,7 +71,8 @@ func (s *Server) routes() {
 	s.handle("POST /networks/{id}/connect", s.handlers.NetworkConnect)
 	s.handle("POST /networks/{id}/disconnect", s.handlers.NetworkDisconnect)
 
-	// Volumes
+	
+
 	s.handle("GET /volumes", s.handlers.VolumeList)
 	s.handle("POST /volumes/create", s.handlers.VolumeCreate)
 	s.handle("GET /volumes/{name}", s.handlers.VolumeInspect)
@@ -75,19 +80,16 @@ func (s *Server) routes() {
 	s.handle("POST /volumes/prune", s.handlers.VolumePrune)
 }
 
-// handle registers a route with versioned and bare paths.
-// pattern must be in the form "METHOD /path" (e.g. "GET /networks/{id}").
-// The method is kept in the registered pattern so that routes sharing the
-// same path template but different methods (e.g. GET vs DELETE) do not
-// collide in the ServeMux.
 func (s *Server) handle(pattern string, fn http.HandlerFunc) {
 	parts := strings.SplitN(pattern, " ", 2)
 	method, path := parts[0], parts[1]
-	_ = method // method is already part of pattern; kept for clarity
+	_ = method 
 
-	// Register bare path — include the method to avoid duplicate-path panics
+	
+
 	s.mux.HandleFunc(pattern, fn)
-	// Register versioned paths /v1.x/...
+	
+
 	for _, v := range []string{"v1.24", "v1.40", "v1.41", "v1.42", "v1.43", "v1.44", "v1.45"} {
 		s.mux.HandleFunc(method+" /"+v+path, fn)
 	}

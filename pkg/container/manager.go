@@ -29,17 +29,21 @@ func (m *Manager) Create(req *CreateRequest, name string) (*Container, error) {
 		name = "/" + name
 	}
 
-	// Resolve names conflict
+	
+
 	existing, _ := m.ListAll()
 	for _, c := range existing {
 		for _, n := range c.Names {
 			if n == name {
 				if c.State.Running {
-					// Running container blocks the name — error like Docker does
+					
+
 					return nil, fmt.Errorf("name %q is already in use by container %s (running); stop it first or use a different name", name, c.ID[:12])
 				}
-				// Exited/stopped container: remove it silently so the new run can proceed
-				// (mirrors Docker --rm semantics for named containers)
+				
+
+				
+
 				containerDir := filepath.Join(config.Global.ContainersDir, c.ID)
 				os.RemoveAll(containerDir)
 				os.Remove(c.LogPath)
@@ -115,7 +119,8 @@ func (m *Manager) Get(idOrName string) (*Container, error) {
 		return nil, err
 	}
 
-	// Try exact match first
+	
+
 	for _, id := range ids {
 		if id == idOrName {
 			var c Container
@@ -126,7 +131,8 @@ func (m *Manager) Get(idOrName string) (*Container, error) {
 		}
 	}
 
-	// Try by name
+	
+
 	for _, id := range ids {
 		var c Container
 		if err := m.store.Load(id, &c); err != nil {
@@ -139,7 +145,8 @@ func (m *Manager) Get(idOrName string) (*Container, error) {
 		}
 	}
 
-	// Try prefix
+	
+
 	resolved, err := store.ResolveID(ids, idOrName)
 	if err != nil {
 		return nil, fmt.Errorf("no such container: %s", idOrName)
@@ -163,10 +170,12 @@ func (m *Manager) Delete(idOrName string) error {
 	if c.State.Running {
 		return fmt.Errorf("cannot remove running container %s; stop it first", idOrName)
 	}
-	// Remove rootfs
+	
+
 	containerDir := filepath.Join(config.Global.ContainersDir, c.ID)
 	os.RemoveAll(containerDir)
-	// Remove log
+	
+
 	os.Remove(c.LogPath)
 	return m.store.Delete(c.ID)
 }

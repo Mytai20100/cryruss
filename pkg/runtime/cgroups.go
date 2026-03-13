@@ -1,4 +1,4 @@
-//go:build linux
+
 
 package runtime
 
@@ -13,7 +13,6 @@ import (
 	"github.com/cryruss/cryruss/pkg/container"
 )
 
-// cgroupVersion detects whether the system uses cgroup v1 or v2.
 func cgroupVersion() int {
 	if _, err := os.Stat("/sys/fs/cgroup/cgroup.controllers"); err == nil {
 		return 2
@@ -21,9 +20,6 @@ func cgroupVersion() int {
 	return 1
 }
 
-// cgroupPath returns the cgroup directory for a container.
-// v1: /sys/fs/cgroup/<subsystem>/cryruss/<id>
-// v2: /sys/fs/cgroup/cryruss/<id>
 func cgroupPath(subsystem, containerID string, version int) string {
 	if version == 2 {
 		return filepath.Join("/sys/fs/cgroup/cryruss", containerID)
@@ -35,8 +31,6 @@ func writeCg(path, value string) error {
 	return os.WriteFile(path, []byte(value), 0644)
 }
 
-// ApplyCgroups applies resource limits to a running container process.
-// Supports cgroup v1 and v2, and works in non-root / user-namespace environments.
 func ApplyCgroups(pid int, hc container.HostConfig, containerID string) {
 	if cgroupVersion() == 2 {
 		applyCgroupV2(pid, hc, containerID)
@@ -44,8 +38,6 @@ func ApplyCgroups(pid int, hc container.HostConfig, containerID string) {
 		applyCgroupV1(pid, hc, containerID)
 	}
 }
-
-// ── cgroup v2 ────────────────────────────────────────────────────────────────
 
 func applyCgroupV2(pid int, hc container.HostConfig, containerID string) {
 	base := cgroupPath("", containerID, 2)
@@ -61,7 +53,8 @@ func applyCgroupV2(pid int, hc container.HostConfig, containerID string) {
 	enableV2Controllers(filepath.Dir(base))
 	_ = writeCg(filepath.Join(base, "cgroup.procs"), strconv.Itoa(pid))
 
-	// Memory
+	
+
 	if hc.Memory > 0 {
 		_ = writeCg(filepath.Join(base, "memory.max"), strconv.FormatInt(hc.Memory, 10))
 	}
@@ -74,7 +67,8 @@ func applyCgroupV2(pid int, hc container.HostConfig, containerID string) {
 		_ = writeCg(filepath.Join(base, "memory.low"), strconv.FormatInt(hc.MemoryReservation, 10))
 	}
 
-	// CPU
+	
+
 	period := hc.CPUPeriod
 	if period == 0 {
 		period = 100000
@@ -95,14 +89,16 @@ func applyCgroupV2(pid int, hc container.HostConfig, containerID string) {
 		_ = writeCg(filepath.Join(base, "cpuset.mems"), hc.CPUSetMems)
 	}
 
-	// PIDs
+	
+
 	if hc.PidsLimit > 0 {
 		_ = writeCg(filepath.Join(base, "pids.max"), strconv.FormatInt(hc.PidsLimit, 10))
 	} else if hc.PidsLimit == -1 {
 		_ = writeCg(filepath.Join(base, "pids.max"), "max")
 	}
 
-	// Block I/O (io.max)
+	
+
 	type ioEntry struct{ rbps, wbps, riops, wiops int64 }
 	ioMap := map[string]*ioEntry{}
 	fill := func(devs []container.ThrottleDevice, field string) {
@@ -181,8 +177,6 @@ func canWriteCgroupDir(path string) bool {
 	return true
 }
 
-// ── cgroup v1 ────────────────────────────────────────────────────────────────
-
 func applyCgroupV1(pid int, hc container.HostConfig, containerID string) {
 	type setup struct {
 		sub string
@@ -190,7 +184,8 @@ func applyCgroupV1(pid int, hc container.HostConfig, containerID string) {
 	}
 	var setups []setup
 
-	// Memory
+	
+
 	if hc.Memory > 0 || hc.MemorySwap != 0 || hc.MemoryReservation > 0 || hc.KernelMemory > 0 {
 		setups = append(setups, setup{"memory", func(b string) {
 			if hc.Memory > 0 {
@@ -213,7 +208,8 @@ func applyCgroupV1(pid int, hc container.HostConfig, containerID string) {
 		}})
 	}
 
-	// CPU
+	
+
 	if hc.NanoCPUs > 0 || hc.CPUShares > 0 || hc.CPUQuota > 0 {
 		setups = append(setups, setup{"cpu", func(b string) {
 			if hc.CPUShares > 0 {
@@ -232,7 +228,8 @@ func applyCgroupV1(pid int, hc container.HostConfig, containerID string) {
 		}})
 	}
 
-	// cpuset
+	
+
 	if hc.CPUSetCPUs != "" || hc.CPUSetMems != "" {
 		setups = append(setups, setup{"cpuset", func(b string) {
 			if hc.CPUSetCPUs != "" {
@@ -248,7 +245,8 @@ func applyCgroupV1(pid int, hc container.HostConfig, containerID string) {
 		}})
 	}
 
-	// PIDs
+	
+
 	if hc.PidsLimit != 0 {
 		setups = append(setups, setup{"pids", func(b string) {
 			if hc.PidsLimit == -1 {
@@ -259,7 +257,8 @@ func applyCgroupV1(pid int, hc container.HostConfig, containerID string) {
 		}})
 	}
 
-	// blkio
+	
+
 	if hc.BlkioWeight > 0 || len(hc.BlkioWeightDevice) > 0 ||
 		len(hc.BlkioDeviceReadBps) > 0 || len(hc.BlkioDeviceWriteBps) > 0 ||
 		len(hc.BlkioDeviceReadIOps) > 0 || len(hc.BlkioDeviceWriteIOps) > 0 {
@@ -293,14 +292,14 @@ func applyCgroupV1(pid int, hc container.HostConfig, containerID string) {
 	for _, s := range setups {
 		base := cgroupPath(s.sub, containerID, 1)
 		if err := os.MkdirAll(base, 0755); err != nil {
-			continue // not writable — skip in non-root env
+			continue 
+
 		}
 		_ = writeCg(filepath.Join(base, "tasks"), strconv.Itoa(pid))
 		s.fn(base)
 	}
 }
 
-// CleanupCgroups removes cgroup directories for a container.
 func CleanupCgroups(containerID string) {
 	if cgroupVersion() == 2 {
 		os.Remove(cgroupPath("", containerID, 2))
@@ -314,7 +313,6 @@ func CleanupCgroups(containerID string) {
 	}
 }
 
-// ReadCgroupStats reads live resource usage stats for a container.
 func ReadCgroupStats(containerID string) map[string]int64 {
 	stats := map[string]int64{}
 	if cgroupVersion() == 2 {
@@ -358,7 +356,6 @@ func ReadCgroupStats(containerID string) map[string]int64 {
 	return stats
 }
 
-// cpuSharesToWeight maps Docker CPU shares (2–262144) to cgroup v2 cpu.weight (1–10000).
 func cpuSharesToWeight(shares int64) int64 {
 	if shares <= 0 {
 		return 100
@@ -373,7 +370,6 @@ func cpuSharesToWeight(shares int64) int64 {
 	return w
 }
 
-// deviceMajMin returns the major and minor numbers of a block device path.
 func deviceMajMin(path string) (uint64, uint64, error) {
 	fi, err := os.Stat(path)
 	if err != nil {

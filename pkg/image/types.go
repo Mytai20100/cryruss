@@ -41,8 +41,6 @@ type History struct {
 	Comment    string    `json:"comment,omitempty"`
 }
 
-// OCI / Docker registry types
-
 type Manifest struct {
 	SchemaVersion int            `json:"schemaVersion"`
 	MediaType     string         `json:"mediaType"`

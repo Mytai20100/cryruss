@@ -1,4 +1,4 @@
-name: Build 
+name: Build
 
 on:
   push:
@@ -71,35 +71,35 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - target: linux-amd64
+          - target: amd64
             goos: linux
             goarch: amd64
             goarm: ""
-          - target: linux-arm64
+          - target: arm64
             goos: linux
             goarch: arm64
             goarm: ""
-          - target: linux-armv7
+          - target: armv7
             goos: linux
             goarch: arm
             goarm: "7"
-          - target: linux-armv6
+          - target: armv6
             goos: linux
             goarch: arm
             goarm: "6"
-          - target: linux-riscv64
+          - target: riscv64
             goos: linux
             goarch: riscv64
             goarm: ""
-          - target: linux-s390x
+          - target: s390x
             goos: linux
             goarch: s390x
             goarm: ""
-          - target: linux-ppc64le
+          - target: ppc64le
             goos: linux
             goarch: ppc64le
             goarm: ""
-          - target: linux-mips64le
+          - target: mips64le
             goos: linux
             goarch: mips64le
             goarm: ""
@@ -133,30 +133,17 @@ jobs:
           CGO_ENABLED: "0"
         run: |
           TAG="${{ steps.version.outputs.tag }}"
-          BINARY="cryruss-${{ matrix.target }}"
           go build \
             -trimpath \
             -ldflags "-s -w -X 'github.com/cryruss/cryruss.Version=${TAG}'" \
-            -o "${BINARY}" \
+            -o "cryruss-${{ matrix.target }}" \
             ./cmd/cryruss
-
-      - name: Create archive
-        run: |
-          BINARY="cryruss-${{ matrix.target }}"
-          tar -czf "${BINARY}.tar.gz" "${BINARY}" README.md LICENSE
-
-      - name: Compute checksums
-        run: |
-          sha256sum "cryruss-${{ matrix.target }}.tar.gz" \
-            > "cryruss-${{ matrix.target }}.tar.gz.sha256"
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: cryruss-${{ matrix.target }}
-          path: |
-            cryruss-${{ matrix.target }}.tar.gz
-            cryruss-${{ matrix.target }}.tar.gz.sha256
+          path: cryruss-${{ matrix.target }}
           retention-days: 7
 
   release:
@@ -187,17 +174,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts/
-
-      - name: Flatten artifacts into release dir
-        run: |
-          mkdir -p release/
-          find artifacts/ -type f \( -name "*.tar.gz" -o -name "*.sha256" \) \
-            -exec cp {} release/ \;
-
-      - name: Generate combined checksums file
-        run: |
-          cd release/
-          cat *.sha256 > checksums.txt
+          merge-multiple: true
 
       - name: Build changelog from commits
         id: changelog
@@ -237,8 +214,6 @@ jobs:
           body:       ${{ steps.changelog.outputs.body }}
           draft:      false
           prerelease: ${{ contains(steps.version.outputs.tag, '-') }}
-          files: |
-            release/*.tar.gz
-            release/checksums.txt
+          files: artifacts/cryruss-*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

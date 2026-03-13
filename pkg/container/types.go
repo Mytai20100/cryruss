@@ -36,33 +36,54 @@ type HostConfig struct {
 	NetworkMode   string        `json:"NetworkMode"`
 	RestartPolicy RestartPolicy `json:"RestartPolicy"`
 	AutoRemove    bool          `json:"AutoRemove"`
-	// Memory limits
-	Memory            int64 `json:"Memory"`            // bytes
-	MemorySwap        int64 `json:"MemorySwap"`        // bytes, -1 = unlimited
-	MemorySwappiness  int64 `json:"MemorySwappiness"`  // 0-100, -1 = default
-	MemoryReservation int64 `json:"MemoryReservation"` // soft limit bytes
-	KernelMemory      int64 `json:"KernelMemory"`      // kernel memory limit bytes
-	// CPU limits
-	NanoCPUs    int64  `json:"NanoCPUs"`   // e.g. 1.5 CPUs = 1500000000
-	CPUShares   int64  `json:"CpuShares"`  // relative weight 10-1024
-	CPUPeriod   int64  `json:"CpuPeriod"`  // microseconds, default 100000
-	CPUQuota    int64  `json:"CpuQuota"`   // microseconds per period
-	CPUSetCPUs  string `json:"CpusetCpus"` // e.g. "0-3" or "0,1"
-	CPUSetMems  string `json:"CpusetMems"` // NUMA nodes
+	
+
+	Memory            int64 `json:"Memory"`            
+
+	MemorySwap        int64 `json:"MemorySwap"`        
+
+	MemorySwappiness  int64 `json:"MemorySwappiness"`  
+
+	MemoryReservation int64 `json:"MemoryReservation"` 
+
+	KernelMemory      int64 `json:"KernelMemory"`      
+
+	
+
+	NanoCPUs    int64  `json:"NanoCPUs"`   
+
+	CPUShares   int64  `json:"CpuShares"`  
+
+	CPUPeriod   int64  `json:"CpuPeriod"`  
+
+	CPUQuota    int64  `json:"CpuQuota"`   
+
+	CPUSetCPUs  string `json:"CpusetCpus"` 
+
+	CPUSetMems  string `json:"CpusetMems"` 
+
 	CPURealtime int64  `json:"CpuRealtimePeriod"`
-	// Block I/O limits
-	BlkioWeight          uint16              `json:"BlkioWeight"` // 10-1000
+	
+
+	BlkioWeight          uint16              `json:"BlkioWeight"` 
+
 	BlkioWeightDevice    []BlkioWeightDevice `json:"BlkioWeightDevice"`
 	BlkioDeviceReadBps   []ThrottleDevice    `json:"BlkioDeviceReadBps"`
 	BlkioDeviceWriteBps  []ThrottleDevice    `json:"BlkioDeviceWriteBps"`
 	BlkioDeviceReadIOps  []ThrottleDevice    `json:"BlkioDeviceReadIOps"`
 	BlkioDeviceWriteIOps []ThrottleDevice    `json:"BlkioDeviceWriteIOps"`
-	// Disk / storage
-	StorageOpt map[string]string `json:"StorageOpt"` // e.g. {"size":"10G"}
-	// Other resource limits
-	PidsLimit      int64  `json:"PidsLimit"`      // max processes, -1 = unlimited
-	SeccompProfile string `json:"SeccompProfile"` // path or "unconfined"
-	// Existing fields
+	
+
+	StorageOpt map[string]string `json:"StorageOpt"` 
+
+	
+
+	PidsLimit      int64  `json:"PidsLimit"`      
+
+	SeccompProfile string `json:"SeccompProfile"` 
+
+	
+
 	SecurityOpt     []string          `json:"SecurityOpt"`
 	CapAdd          []string          `json:"CapAdd"`
 	CapDrop         []string          `json:"CapDrop"`
@@ -87,16 +108,15 @@ type HostConfig struct {
 	NetworkAliases  []string          `json:"NetworkAliases"`
 }
 
-// BlkioWeightDevice sets per-device blkio weight.
 type BlkioWeightDevice struct {
 	Path   string `json:"Path"`
 	Weight uint16 `json:"Weight"`
 }
 
-// ThrottleDevice sets a per-device I/O rate limit.
 type ThrottleDevice struct {
 	Path string `json:"Path"`
-	Rate int64  `json:"Rate"` // bytes/s or IOPS depending on field
+	Rate int64  `json:"Rate"` 
+
 }
 
 type LogConfig struct {

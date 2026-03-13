@@ -10,10 +10,6 @@ import (
 	"github.com/cryruss/cryruss/pkg/store"
 )
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Types
-// ──────────────────────────────────────────────────────────────────────────────
-
 type Network struct {
 	ID         string                      `json:"Id"`
 	Name       string                      `json:"Name"`
@@ -68,10 +64,6 @@ type ConnectRequest struct {
 	IPv6      string   `json:"IPv6Address"`
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Manager
-// ──────────────────────────────────────────────────────────────────────────────
-
 type Manager struct {
 	store *store.Store
 }
@@ -119,12 +111,9 @@ func (m *Manager) ensureDefaults() {
 	}
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// CRUD
-// ──────────────────────────────────────────────────────────────────────────────
-
 func (m *Manager) Create(req *CreateRequest) (*Network, error) {
-	// Duplicate name check
+	
+
 	if req.CheckDuplicate || req.Name != "" {
 		existing, _ := m.List()
 		for _, n := range existing {
@@ -190,7 +179,8 @@ func (m *Manager) Create(req *CreateRequest) (*Network, error) {
 }
 
 func (m *Manager) Get(idOrName string) (*Network, error) {
-	// Built-in names first
+	
+
 	for _, name := range []string{"host", "none", "bridge"} {
 		if idOrName == name {
 			var n Network
@@ -200,7 +190,8 @@ func (m *Manager) Get(idOrName string) (*Network, error) {
 			return &n, nil
 		}
 	}
-	// Exact ID
+	
+
 	if m.store.Exists(idOrName) {
 		var n Network
 		if err := m.store.Load(idOrName, &n); err != nil {
@@ -208,7 +199,8 @@ func (m *Manager) Get(idOrName string) (*Network, error) {
 		}
 		return &n, nil
 	}
-	// By name index
+	
+
 	var nameRef map[string]string
 	if err := m.store.Load("name-"+idOrName, &nameRef); err == nil {
 		if id, ok := nameRef["id"]; ok {
@@ -218,7 +210,8 @@ func (m *Manager) Get(idOrName string) (*Network, error) {
 			}
 		}
 	}
-	// Prefix match
+	
+
 	ids, _ := m.store.List()
 	for _, id := range ids {
 		if len(id) >= len(idOrName) && id[:len(idOrName)] == idOrName {
@@ -238,7 +231,8 @@ func (m *Manager) List() ([]*Network, error) {
 	}
 	var result []*Network
 	seen := map[string]bool{}
-	// built-ins first (stable order)
+	
+
 	for _, name := range []string{"bridge", "host", "none"} {
 		var n Network
 		if err := m.store.Load(name, &n); err == nil && !seen[n.ID] {
@@ -281,8 +275,6 @@ func (m *Manager) DeleteForce(idOrName string, force bool) error {
 	return m.store.Delete(n.ID)
 }
 
-// Prune removes all networks not used by any container.
-// Returns the list of pruned network names.
 func (m *Manager) Prune() ([]string, error) {
 	networks, err := m.List()
 	if err != nil {
@@ -301,10 +293,6 @@ func (m *Manager) Prune() ([]string, error) {
 	}
 	return pruned, nil
 }
-
-// ──────────────────────────────────────────────────────────────────────────────
-// Connect / Disconnect
-// ──────────────────────────────────────────────────────────────────────────────
 
 func (m *Manager) Connect(networkIDOrName, containerID, containerName string, req *ConnectRequest) error {
 	n, err := m.Get(networkIDOrName)
@@ -358,11 +346,6 @@ func (m *Manager) Disconnect(networkIDOrName, containerID string, force bool) er
 	return m.store.Save(key, n)
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Helpers
-// ──────────────────────────────────────────────────────────────────────────────
-
-// allocateSubnet picks an unused 172.18-31.x.0/24 subnet.
 func allocateSubnet(m *Manager) (subnet, gateway string) {
 	used := map[string]bool{}
 	networks, _ := m.List()
@@ -377,12 +360,12 @@ func allocateSubnet(m *Manager) (subnet, gateway string) {
 			return s, fmt.Sprintf("172.%d.0.1", b)
 		}
 	}
-	// fallback: random /24
+	
+
 	rnd := 100 + rand.Intn(100)
 	return fmt.Sprintf("10.%d.0.0/24", rnd), fmt.Sprintf("10.%d.0.1", rnd)
 }
 
-// allocateContainerIP assigns the next free IP in the network's first subnet.
 func allocateContainerIP(n *Network) string {
 	if len(n.IPAM.Config) == 0 {
 		return ""
@@ -396,8 +379,10 @@ func allocateContainerIP(n *Network) string {
 		used[ep.IPv4Address] = true
 	}
 	ip := cloneIP(ipNet.IP)
-	inc(ip) // skip network address
-	inc(ip) // .1 is gateway, start from .2
+	inc(ip) 
+
+	inc(ip) 
+
 	inc(ip)
 	for ipNet.Contains(ip) {
 		s := ip.String()
@@ -432,6 +417,7 @@ func maskBits(n *net.IPNet) string {
 func randomMAC() string {
 	b := make([]byte, 6)
 	rand.Read(b)
-	b[0] = (b[0] | 0x02) & 0xfe // locally administered, unicast
+	b[0] = (b[0] | 0x02) & 0xfe 
+
 	return fmt.Sprintf("%02x:%02x:%02x:%02x:%02x:%02x", b[0], b[1], b[2], b[3], b[4], b[5])
 }

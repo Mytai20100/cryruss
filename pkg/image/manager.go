@@ -46,7 +46,8 @@ func (m *Manager) Get(idOrTag string) (*Image, error) {
 		return nil, err
 	}
 
-	// Exact ID
+	
+
 	for _, id := range ids {
 		if id == idOrTag || "sha256:"+id == idOrTag {
 			var img Image
@@ -57,7 +58,8 @@ func (m *Manager) Get(idOrTag string) (*Image, error) {
 		}
 	}
 
-	// By tag
+	
+
 	for _, id := range ids {
 		var img Image
 		if err := m.store.Load(id, &img); err != nil {
@@ -70,7 +72,8 @@ func (m *Manager) Get(idOrTag string) (*Image, error) {
 		}
 	}
 
-	// Prefix match
+	
+
 	resolved, err := store.ResolveID(ids, idOrTag)
 	if err != nil {
 		return nil, fmt.Errorf("no such image: %s", idOrTag)
@@ -112,7 +115,8 @@ func (m *Manager) Tag(src, newTag string) error {
 	if err != nil {
 		return err
 	}
-	// Add new tag if not present
+	
+
 	for _, t := range img.RepoTags {
 		if t == newTag {
 			return nil
@@ -123,20 +127,22 @@ func (m *Manager) Tag(src, newTag string) error {
 	return m.store.Save(id, img)
 }
 
-// PrepareRootfs builds container rootfs from image layers
 func (m *Manager) PrepareRootfs(img *Image, rootfs string) error {
 	os.MkdirAll(rootfs, 0755)
 
-	// Check fuse-overlayfs availability
+	
+
 	if canOverlay(rootfs) {
 		return m.overlayRootfs(img, rootfs)
 	}
-	// Fall back to copy
+	
+
 	return m.copyRootfs(img, rootfs)
 }
 
 func canOverlay(rootfs string) bool {
-	// Check if fuse-overlayfs is available
+	
+
 	_, err := os.Stat("/usr/bin/fuse-overlayfs")
 	if err != nil {
 		_, err = lookPath("fuse-overlayfs")
@@ -223,8 +229,10 @@ func copyFile(src, dst string, mode os.FileMode) error {
 }
 
 func (m *Manager) overlayRootfs(img *Image, rootfs string) error {
-	// TODO: implement fuse-overlayfs based overlay
-	// For now fall back to copy
+	
+
+	
+
 	return m.copyRootfs(img, rootfs)
 }
 

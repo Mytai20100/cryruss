@@ -28,7 +28,8 @@ import (
 )
 
 func main() {
-	// Handle container init reexec (must be first)
+	
+
 	if len(os.Args) > 1 && os.Args[1] == rt.InitArg {
 		rt.ContainerInit()
 		os.Exit(0)
@@ -41,7 +42,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Expand combined short flags (e.g. -it → -i -t, -dit → -d -i -t)
+	
+
 	os.Args = expandCombinedFlags(os.Args)
 
 	cmd := os.Args[1]
@@ -212,7 +214,8 @@ func cmdRun(args []string) {
 	readOnly := fs.Bool("read-only", false, "Mount container's root filesystem as read only")
 	useProot := fs.Bool("proot", false, "Use proot instead of user namespaces (for non-root envs without newuidmap)")
 
-	// ── Memory limits ────────────────────────────────────────────────────────
+	
+
 	memory := fs.String("memory", "", "Memory limit (e.g. 512m, 1g)")
 	fs.String("m", "", "Memory limit (shorthand)")
 	memorySwap := fs.String("memory-swap", "", "Swap limit (memory+swap, -1 = unlimited)")
@@ -220,7 +223,8 @@ func cmdRun(args []string) {
 	memoryReservation := fs.String("memory-reservation", "", "Memory soft limit")
 	kernelMemory := fs.String("kernel-memory", "", "Kernel memory limit")
 
-	// ── CPU limits ───────────────────────────────────────────────────────────
+	
+
 	cpus := fs.Float64("cpus", 0, "Number of CPUs (e.g. 1.5)")
 	cpuShares := fs.Int64("cpu-shares", 0, "CPU shares (relative weight, default 1024)")
 	fs.Int64("c", 0, "CPU shares shorthand")
@@ -229,7 +233,8 @@ func cmdRun(args []string) {
 	cpusetCpus := fs.String("cpuset-cpus", "", "CPUs to allow (e.g. 0-3, 0,1)")
 	cpusetMems := fs.String("cpuset-mems", "", "NUMA nodes to allow")
 
-	// ── Block I/O limits ─────────────────────────────────────────────────────
+	
+
 	blkioWeight := fs.Uint64("blkio-weight", 0, "Block IO weight (10-1000)")
 	var blkioWeightDevice multiFlag
 	fs.Var(&blkioWeightDevice, "blkio-weight-device", "Block IO weight per device (PATH:WEIGHT)")
@@ -242,14 +247,17 @@ func cmdRun(args []string) {
 	var deviceWriteIops multiFlag
 	fs.Var(&deviceWriteIops, "device-write-iops", "Limit write IOPS to device (PATH:IOPS)")
 
-	// ── Process / PIDs ───────────────────────────────────────────────────────
+	
+
 	pidsLimit := fs.Int64("pids-limit", 0, "Tune container pids limit (-1 = unlimited)")
 
-	// ── Storage / disk ───────────────────────────────────────────────────────
+	
+
 	var storageOpts multiFlag
 	fs.Var(&storageOpts, "storage-opt", "Storage driver options (e.g. size=10G)")
 
-	// ── Other existing flags ─────────────────────────────────────────────────
+	
+
 	var envs multiFlag
 	fs.Var(&envs, "e", "Set environment variables")
 	fs.Var(&envs, "env", "Set environment variables")
@@ -271,7 +279,8 @@ func cmdRun(args []string) {
 	var secOpts multiFlag
 	fs.Var(&secOpts, "security-opt", "Security options")
 
-	// ── Networking extras ────────────────────────────────────────────────────
+	
+
 	var addHosts multiFlag
 	fs.Var(&addHosts, "add-host", "Add a custom host-to-IP mapping (host:ip)")
 	var dns multiFlag
@@ -287,7 +296,8 @@ func cmdRun(args []string) {
 	var links multiFlag
 	fs.Var(&links, "link", "Add link to another container")
 
-	// ── Privilege / process isolation ────────────────────────────────────────
+	
+
 	privileged := fs.Bool("privileged", false, "Give extended privileges to this container")
 	publishAll := fs.Bool("P", false, "Publish all exposed ports to random ports")
 	restart := fs.String("restart", "no", "Restart policy (no|always|on-failure|unless-stopped)")
@@ -299,16 +309,19 @@ func cmdRun(args []string) {
 	macAddress := fs.String("mac-address", "", "Container MAC address")
 	ip := fs.String("ip", "", "IPv4 address (e.g., 172.30.100.104)")
 
-	// ── Logging ──────────────────────────────────────────────────────────────
+	
+
 	logDriver := fs.String("log-driver", "json-file", "Logging driver for the container")
 	var logOpts multiFlag
 	fs.Var(&logOpts, "log-opt", "Log driver options")
 
-	// ── Env file ─────────────────────────────────────────────────────────────
+	
+
 	var envFile multiFlag
 	fs.Var(&envFile, "env-file", "Read in a file of environment variables")
 
-	// ── Ulimits ──────────────────────────────────────────────────────────────
+	
+
 	var ulimits multiFlag
 	fs.Var(&ulimits, "ulimit", "Ulimit options (e.g. nofile=1024:2048)")
 
@@ -342,7 +355,8 @@ func cmdRun(args []string) {
 	portMap := parsePortBindings(ports)
 	mounts := parseMounts(volumes)
 
-	// Parse resource limits
+	
+
 	mem := parseMemory(*memory)
 	memSwap := parseMemory(*memorySwap)
 	memRes := parseMemory(*memoryReservation)
@@ -369,31 +383,37 @@ func cmdRun(args []string) {
 			PortBindings: portMap,
 			NetworkMode:  *netMode,
 			AutoRemove:   *rm,
-			// Memory
+			
+
 			Memory:            mem,
 			MemorySwap:        memSwap,
 			MemorySwappiness:  *memorySwappiness,
 			MemoryReservation: memRes,
 			KernelMemory:      kernMem,
-			// CPU
+			
+
 			NanoCPUs:   nanoCPUs,
 			CPUShares:  *cpuShares,
 			CPUPeriod:  *cpuPeriod,
 			CPUQuota:   *cpuQuota,
 			CPUSetCPUs: *cpusetCpus,
 			CPUSetMems: *cpusetMems,
-			// Block I/O
+			
+
 			BlkioWeight:          uint16(*blkioWeight),
 			BlkioWeightDevice:    parseBlkioWeightDevices(blkioWeightDevice),
 			BlkioDeviceReadBps:   parseBlkioThrottleDevices(deviceReadBps),
 			BlkioDeviceWriteBps:  parseBlkioThrottleDevices(deviceWriteBps),
 			BlkioDeviceReadIOps:  parseBlkioThrottleDevices(deviceReadIops),
 			BlkioDeviceWriteIOps: parseBlkioThrottleDevices(deviceWriteIops),
-			// PIDs
+			
+
 			PidsLimit: *pidsLimit,
-			// Storage
+			
+
 			StorageOpt: parseKeyValueList(storageOpts),
-			// Other
+			
+
 			CapAdd:          capAdd,
 			CapDrop:         capDrop,
 			SecurityOpt:     secOpts,
@@ -416,7 +436,8 @@ func cmdRun(args []string) {
 	if *entrypoint != "" {
 		req.Entrypoint = strings.Fields(*entrypoint)
 	}
-	// --env-file: read env vars from files
+	
+
 	for _, ef := range envFile {
 		lines, err := readEnvFile(ef)
 		if err != nil {
@@ -436,7 +457,8 @@ func cmdRun(args []string) {
 	mgr := container.NewManager()
 	imgMgr := image.NewManager()
 
-	// Pull image if not present
+	
+
 	img, err := imgMgr.Get(imageName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "pulling %s...\n", imageName)
@@ -451,7 +473,8 @@ func cmdRun(args []string) {
 		}
 	}
 
-	// Apply image defaults
+	
+
 	if img.Config != nil {
 		if len(req.Cmd) == 0 && len(req.Entrypoint) == 0 {
 			req.Cmd = img.Config.Cmd
@@ -476,7 +499,8 @@ func cmdRun(args []string) {
 		os.Exit(1)
 	}
 
-	// Prepare rootfs
+	
+
 	if img != nil {
 		if err := imgMgr.PrepareRootfs(img, c.RootfsPath); err != nil {
 			fmt.Fprintf(os.Stderr, "cryruss: rootfs: %v\n", err)
@@ -490,7 +514,8 @@ func cmdRun(args []string) {
 		TTY:         *tty,
 	}
 
-	// Choose start method: proot or normal user-namespace
+	
+
 	startFn := rt.Start
 	if *useProot {
 		startFn = rt.StartWithProot
@@ -561,8 +586,6 @@ func cmdRun(args []string) {
 	}
 }
 
-// ---- create ----
-
 func cmdCreate(args []string) {
 	fs := flag.NewFlagSet("create", flag.ExitOnError)
 	name := fs.String("name", "", "Assign a name to the container")
@@ -627,8 +650,6 @@ func cmdCreate(args []string) {
 	}
 	fmt.Println(c.ID)
 }
-
-// ---- ps ----
 
 func cmdPs(args []string) {
 	fs := flag.NewFlagSet("ps", flag.ExitOnError)
@@ -699,8 +720,6 @@ func cmdPs(args []string) {
 	}
 	w.Flush()
 }
-
-// ---- start/stop/restart ----
 
 func cmdStart(args []string) {
 	fs := flag.NewFlagSet("start", flag.ExitOnError)
@@ -834,8 +853,6 @@ func cmdRm(args []string) {
 	}
 }
 
-// ---- exec ----
-
 func cmdExec(args []string) {
 	fs := flag.NewFlagSet("exec", flag.ExitOnError)
 	interactive := fs.Bool("i", false, "Keep STDIN open")
@@ -864,7 +881,8 @@ func cmdExec(args []string) {
 		os.Exit(1)
 	}
 
-	// Use nsenter to enter the container namespaces
+	
+
 	pid := rt.GetPID(c.ID)
 	if pid <= 0 {
 		pid = c.State.Pid
@@ -911,8 +929,6 @@ func cmdExec(args []string) {
 	}
 }
 
-// ---- logs ----
-
 func cmdLogs(args []string) {
 	fs := flag.NewFlagSet("logs", flag.ExitOnError)
 	follow := fs.Bool("f", false, "Follow log output")
@@ -942,7 +958,8 @@ func cmdLogs(args []string) {
 	if *tail != "all" {
 		n, _ := strconv.Atoi(*tail)
 		if n > 0 {
-			// Simple approach: read entire file
+			
+
 			data, _ := io.ReadAll(f)
 			lines := strings.Split(string(data), "\n")
 			if len(lines) > n {
@@ -965,8 +982,6 @@ func cmdLogs(args []string) {
 		}
 	}
 }
-
-// ---- inspect ----
 
 func cmdInspect(args []string) {
 	fs := flag.NewFlagSet("inspect", flag.ExitOnError)
@@ -993,7 +1008,8 @@ func cmdInspect(args []string) {
 		case "network":
 			obj, err = network.NewManager().Get(id)
 		default:
-			// Try container first, then image
+			
+
 			c, cerr := container.NewManager().Get(id)
 			if cerr == nil {
 				obj = c
@@ -1018,8 +1034,6 @@ func cmdInspect(args []string) {
 	enc.SetIndent("", "    ")
 	enc.Encode(results)
 }
-
-// ---- kill ----
 
 func cmdKill(args []string) {
 	fs := flag.NewFlagSet("kill", flag.ExitOnError)
@@ -1138,7 +1152,8 @@ func cmdStats(args []string) {
 		fmt.Fprintf(w, "%s\t%s\t%.2f%%\t%s / %s\t%.1f%%\t%d\n",
 			c.ID[:12],
 			strings.Join(c.Names, ","),
-			0.0, // CPU % requires delta measurement over time
+			0.0, 
+
 			memUsageStr, memLimitStr,
 			memPct,
 			pids,
@@ -1162,7 +1177,8 @@ func cmdTop(args []string) {
 		fmt.Println("UID   PID   PPID   C   STIME   TTY   TIME   CMD")
 		return
 	}
-	// Show processes in the container's PID namespace via /proc
+	
+
 	cmd := exec.Command("ps", "-o", "uid,pid,ppid,c,stime,tty,time,cmd", "--ppid", fmt.Sprint(c.State.Pid))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -1212,15 +1228,18 @@ func cmdCp(args []string) {
 		fmt.Fprintln(os.Stderr, "usage: cryruss cp CONTAINER:PATH DEST | cryruss cp SRC CONTAINER:PATH")
 		os.Exit(1)
 	}
-	// Parse src and dst
+	
+
 	src := args[0]
 	dst := args[1]
 
 	mgr := container.NewManager()
 
-	// Determine direction
+	
+
 	if strings.Contains(src, ":") {
-		// Container -> host
+		
+
 		parts := strings.SplitN(src, ":", 2)
 		c, err := mgr.Get(parts[0])
 		if err != nil {
@@ -1233,7 +1252,8 @@ func cmdCp(args []string) {
 		cmd.Stderr = os.Stderr
 		cmd.Run()
 	} else {
-		// Host -> container
+		
+
 		parts := strings.SplitN(dst, ":", 2)
 		c, err := mgr.Get(parts[0])
 		if err != nil {
@@ -1247,8 +1267,6 @@ func cmdCp(args []string) {
 		cmd.Run()
 	}
 }
-
-// ---- images ----
 
 func cmdImages(args []string) {
 	fs := flag.NewFlagSet("images", flag.ExitOnError)
@@ -1319,7 +1337,8 @@ func cmdPull(args []string) {
 
 	fmt.Printf("Pulling from \x1b[1m%s\x1b[0m\n", ref)
 
-	// ── animated progress state ─────────────────────────────────────────────
+	
+
 	type layerState struct {
 		id      string
 		current int64
@@ -1465,8 +1484,6 @@ func cmdImageHistory(args []string) {
 	w.Flush()
 }
 
-// ---- network ----
-
 func cmdNetwork(args []string) {
 	if len(args) == 0 {
 		fmt.Print(`Usage:  cryruss network COMMAND
@@ -1516,13 +1533,15 @@ func cmdNetworkList(args []string) {
 	fs.Parse(args)
 	_ = *format
 
-	// Parse filters
+	
+
 	filterMap := parseKeyValueList(filters)
 
 	mgr := network.NewManager()
 	networks, _ := mgr.List()
 
-	// Apply filters
+	
+
 	var filtered []*network.Network
 	for _, n := range networks {
 		if len(filterMap) > 0 {
@@ -1779,8 +1798,6 @@ func cmdNetworkPrune(args []string) {
 	}
 }
 
-// ---- volume ----
-
 func cmdVolume(args []string) {
 	if len(args) == 0 {
 		fmt.Println("Usage: cryruss volume COMMAND")
@@ -1884,8 +1901,6 @@ func cmdVolumePrune(args []string) {
 	fmt.Printf("Total reclaimed space: %s\n", image.FormatSize(freed))
 }
 
-// ---- system ----
-
 func cmdSystem(args []string) {
 	if len(args) == 0 {
 		fmt.Println("Usage: cryruss system COMMAND")
@@ -1971,16 +1986,12 @@ func cmdSystemDf(args []string) {
 	w.Flush()
 }
 
-// ---- version ----
-
 func cmdVersion(args []string) {
 	fmt.Printf("cryruss version %s\n", cryruss.Version)
 	fmt.Printf("API version %s\n", cryruss.APIVersion)
 	fmt.Printf("Go version %s\n", runtime.Version())
 	fmt.Printf("OS/Arch %s/%s\n", runtime.GOOS, runtime.GOARCH)
 }
-
-// ---- serve (API daemon) ----
 
 func cmdServe(args []string) {
 	fs := flag.NewFlagSet("serve", flag.ExitOnError)
@@ -1991,7 +2002,8 @@ func cmdServe(args []string) {
 		config.Global.SocketPath = *socketPath
 	}
 
-	// Remove stale socket
+	
+
 	os.Remove(config.Global.SocketPath)
 
 	srv := api.NewServer()
@@ -2010,8 +2022,6 @@ func cmdServe(args []string) {
 		os.Exit(1)
 	}
 }
-
-// ---- helpers ----
 
 type multiFlag []string
 
@@ -2155,11 +2165,6 @@ func hasRootfs(path string) bool {
 	return false
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Helper functions added for new flags
-// ──────────────────────────────────────────────────────────────────────────────
-
-// parseKeyValueList converts ["key=val", ...] into map[string]string.
 func parseKeyValueList(pairs []string) map[string]string {
 	m := map[string]string{}
 	for _, p := range pairs {
@@ -2173,7 +2178,6 @@ func parseKeyValueList(pairs []string) map[string]string {
 	return m
 }
 
-// parseUlimits converts ["nofile=1024:2048"] into []container.Ulimit.
 func parseUlimits(specs []string) []container.Ulimit {
 	var out []container.Ulimit
 	for _, s := range specs {
@@ -2194,7 +2198,6 @@ func parseUlimits(specs []string) []container.Ulimit {
 	return out
 }
 
-// readEnvFile reads a file of KEY=VALUE lines, ignoring blank lines and comments.
 func readEnvFile(path string) ([]string, error) {
 	b, err := os.ReadFile(path)
 	if err != nil {
@@ -2210,10 +2213,6 @@ func readEnvFile(path string) ([]string, error) {
 	}
 	return env, nil
 }
-
-// ──────────────────────────────────────────────────────────────────────────────
-// Stack command  (docker stack deploy / ls / rm / services / ps)
-// ──────────────────────────────────────────────────────────────────────────────
 
 func cmdStack(args []string) {
 	if len(args) == 0 {
@@ -2247,8 +2246,6 @@ Commands:
 	}
 }
 
-// ─── Stack state is stored as a label on containers: com.docker.stack.namespace ───
-
 const stackLabel = "com.docker.stack.namespace"
 const stackServiceLabel = "com.docker.stack.service"
 
@@ -2270,7 +2267,8 @@ func cmdStackDeploy(args []string) {
 
 	cf := *composeFile
 	if cf == "" {
-		// Try default filenames
+		
+
 		for _, name := range []string{"docker-compose.yml", "docker-compose.yaml", "compose.yml", "compose.yaml"} {
 			if _, err := os.Stat(name); err == nil {
 				cf = name
@@ -2291,7 +2289,8 @@ func cmdStackDeploy(args []string) {
 
 	fmt.Printf("Deploying stack '%s' from '%s'\n", stackName, cf)
 
-	// Create networks declared in compose file
+	
+
 	nMgr := network.NewManager()
 	for netName := range compose.Networks {
 		fullName := stackName + "_" + netName
@@ -2307,7 +2306,8 @@ func cmdStackDeploy(args []string) {
 		}
 	}
 
-	// Create volumes declared in compose file
+	
+
 	vMgr := volume.NewManager()
 	for volName := range compose.Volumes {
 		fullName := stackName + "_" + volName
@@ -2321,7 +2321,8 @@ func cmdStackDeploy(args []string) {
 		}
 	}
 
-	// Deploy each service
+	
+
 	cMgr := container.NewManager()
 	imgMgr := image.NewManager()
 
@@ -2329,7 +2330,8 @@ func cmdStackDeploy(args []string) {
 		fullName := stackName + "_" + svcName
 		fmt.Printf("Creating service %s\n", fullName)
 
-		// Pull image if missing
+		
+
 		img, err := imgMgr.Get(svc.Image)
 		if err != nil && svc.Image != "" {
 			fmt.Printf("Pulling %s (%s)\n", svcName, svc.Image)
@@ -2413,7 +2415,8 @@ func cmdStackList(args []string) {
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
 	fmt.Fprintln(w, "NAME\tSERVICES")
-	// collect unique stack names via service label
+	
+
 	services := map[string]map[string]bool{}
 	for _, c := range ctrs {
 		ns, ok := c.Labels[stackLabel]
@@ -2460,7 +2463,8 @@ func cmdStackRm(args []string) {
 			cMgr.Delete(c.ID)
 		}
 
-		// Remove stack networks
+		
+
 		nMgr := network.NewManager()
 		nets, _ := nMgr.List()
 		for _, n := range nets {
@@ -2470,7 +2474,8 @@ func cmdStackRm(args []string) {
 			}
 		}
 
-		// Remove stack volumes
+		
+
 		vMgr := volume.NewManager()
 		vols, _ := vMgr.List()
 		for _, v := range vols {
@@ -2574,10 +2579,6 @@ func cmdStackServices(args []string) {
 	w.Flush()
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Minimal Docker Compose YAML parser (no external deps)
-// ──────────────────────────────────────────────────────────────────────────────
-
 type ComposeFile struct {
 	Version  string
 	Services map[string]*ComposeService
@@ -2627,8 +2628,6 @@ type ComposeVolume struct {
 	Name     string
 }
 
-// parseComposeFile reads a docker-compose YAML file using a simple line-by-line
-// parser that handles the most common docker-compose v2/v3 constructs.
 func parseComposeFile(path string) (*ComposeFile, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -2643,12 +2642,14 @@ func parseComposeFile(path string) (*ComposeFile, error) {
 
 	lines := strings.Split(string(data), "\n")
 
-	// States
+	
+
 	const (
 		stateRoot     = "root"
 		stateServices = "services"
 		stateSvc      = "service"
-		stateSvcSub   = "service_sub" // nested key inside service (environment, volumes, etc.)
+		stateSvcSub   = "service_sub" 
+
 		stateNetworks = "networks"
 		stateNet      = "network"
 		stateVolumes  = "volumes"
@@ -2660,7 +2661,7 @@ func parseComposeFile(path string) (*ComposeFile, error) {
 	var curSvcName string
 	var curNetName string
 	var curVolName string
-	var curSubKey string // "environment", "volumes", "ports", "labels", "networks", "depends_on", etc.
+	var curSubKey string 
 
 	indent := func(line string) int {
 		n := 0
@@ -2675,7 +2676,8 @@ func parseComposeFile(path string) (*ComposeFile, error) {
 	}
 
 	trimLine := func(line string) string {
-		// Remove inline comments (simplified: only outside quotes)
+		
+
 		if idx := strings.Index(line, " #"); idx > 0 {
 			line = strings.TrimRight(line[:idx], " \t")
 		}
@@ -2700,7 +2702,8 @@ func parseComposeFile(path string) (*ComposeFile, error) {
 			continue
 		}
 
-		// Strip trailing colon key markers
+		
+
 		keyOnly := strings.HasSuffix(line, ":") && !strings.Contains(line, ": ")
 
 		kv := strings.SplitN(line, ": ", 2)
@@ -2710,7 +2713,8 @@ func parseComposeFile(path string) (*ComposeFile, error) {
 			val = parseScalar(kv[1])
 		}
 
-		// Root-level section detection
+		
+
 		if lvl == 0 {
 			switch key {
 			case "version":
@@ -2728,10 +2732,12 @@ func parseComposeFile(path string) (*ComposeFile, error) {
 			continue
 		}
 
-		// Services section: lvl==2 is service name, lvl==4 is service key, lvl==6 is list/map item
+		
+
 		if state == stateServices || state == stateSvc || state == stateSvcSub || state == stateDeploy {
 			if lvl == 2 {
-				// new service name
+				
+
 				curSvcName = key
 				if _, ok := cf.Services[curSvcName]; !ok {
 					cf.Services[curSvcName] = &ComposeService{
@@ -2751,7 +2757,8 @@ func parseComposeFile(path string) (*ComposeFile, error) {
 				curSubKey = key
 				state = stateSvc
 				if !keyOnly && val != "" {
-					// direct assignment
+					
+
 					switch key {
 					case "image":
 						svc.Image = val
@@ -2788,7 +2795,8 @@ func parseComposeFile(path string) (*ComposeFile, error) {
 				continue
 			}
 			if lvl == 4 && state == stateDeploy {
-				// back to service keys
+				
+
 				state = stateSvc
 				svc := cf.Services[curSvcName]
 				curSubKey = key
@@ -2850,7 +2858,8 @@ func parseComposeFile(path string) (*ComposeFile, error) {
 			}
 		}
 
-		// Networks section
+		
+
 		if state == stateNetworks || state == stateNet {
 			if lvl == 2 {
 				curNetName = key
@@ -2879,7 +2888,8 @@ func parseComposeFile(path string) (*ComposeFile, error) {
 			}
 		}
 
-		// Volumes section
+		
+
 		if state == stateVolumes || state == stateVol {
 			if lvl == 2 {
 				curVolName = key
@@ -2910,33 +2920,33 @@ func parseComposeFile(path string) (*ComposeFile, error) {
 	return cf, nil
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Combined flag expansion
-// ──────────────────────────────────────────────────────────────────────────────
-
-// expandCombinedFlags expands combined short flags into individual flags.
-// Examples: -it → -i -t,  -dit → -d -i -t,  -ait → -a -i -t
-// Mirrors Docker's flag-combination behavior.
-//
-// Only single-character flags that do NOT accept a value are eligible for
-// combination (d, i, t, a, q, f, v, rm is not a single char so stays as --rm).
 func expandCombinedFlags(args []string) []string {
-	// Combinable single-char boolean flags (must not accept a value argument).
+	
+
 	combinable := map[byte]bool{
-		'a': true, // --all / --attach
-		'd': true, // --detach
-		'f': true, // --force
-		'i': true, // --interactive
-		'q': true, // --quiet
-		't': true, // --tty
-		'v': true, // --volumes (rm -v)
+		'a': true, 
+
+		'd': true, 
+
+		'f': true, 
+
+		'i': true, 
+
+		'q': true, 
+
+		't': true, 
+
+		'v': true, 
+
 	}
 
 	out := make([]string, 0, len(args))
 	for _, arg := range args {
-		// Eligible: starts with single '-', not '--', more than 2 chars total
+		
+
 		if len(arg) > 2 && arg[0] == '-' && arg[1] != '-' {
-			chars := arg[1:] // e.g. "it" from "-it"
+			chars := arg[1:] 
+
 			allComb := true
 			for i := 0; i < len(chars); i++ {
 				if !combinable[chars[i]] {
@@ -2956,15 +2966,6 @@ func expandCombinedFlags(args []string) []string {
 	return out
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Resource limit flag parsing helpers
-// ──────────────────────────────────────────────────────────────────────────────
-
-// parseBlkioThrottleDevices parses Docker-style device throttle specs:
-//
-//	"PATH:RATE"  →  e.g. "/dev/sda:10mb", "/dev/sdb:1000"
-//
-// Supports suffixes: b (bytes), k/kb, m/mb, g/gb for bps; plain int for iops.
 func parseBlkioThrottleDevices(specs []string) []container.ThrottleDevice {
 	var out []container.ThrottleDevice
 	for _, s := range specs {
@@ -2978,7 +2979,6 @@ func parseBlkioThrottleDevices(specs []string) []container.ThrottleDevice {
 	return out
 }
 
-// parseBlkioWeightDevices parses "PATH:WEIGHT" specs.
 func parseBlkioWeightDevices(specs []string) []container.BlkioWeightDevice {
 	var out []container.BlkioWeightDevice
 	for _, s := range specs {
@@ -2993,7 +2993,6 @@ func parseBlkioWeightDevices(specs []string) []container.BlkioWeightDevice {
 	return out
 }
 
-// parseRateBytes parses a byte-rate string like "10mb", "1gb", "512", "100kb".
 func parseRateBytes(s string) int64 {
 	s = strings.ToLower(strings.TrimSpace(s))
 	mul := int64(1)

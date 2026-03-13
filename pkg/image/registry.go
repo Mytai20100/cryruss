@@ -83,7 +83,8 @@ func (c *RegistryClient) fetchManifest(ref Reference, token string) (*Manifest, 
 
 	ct := resp.Header.Get("Content-Type")
 
-	// Handle manifest list / index - pick right platform
+	
+
 	if strings.Contains(ct, "manifest.list") || strings.Contains(ct, "image.index") {
 		var idx ManifestIndex
 		if err := json.Unmarshal(body, &idx); err != nil {
@@ -112,13 +113,15 @@ func (c *RegistryClient) selectPlatform(idx ManifestIndex) (string, error) {
 	if arch == "amd64" {
 		arch = "amd64"
 	}
-	// Try exact match
+	
+
 	for _, e := range idx.Manifests {
 		if e.Platform.OS == goos && e.Platform.Architecture == arch {
 			return e.Digest, nil
 		}
 	}
-	// Fallback to amd64/linux
+	
+
 	for _, e := range idx.Manifests {
 		if e.Platform.OS == "linux" && e.Platform.Architecture == "amd64" {
 			return e.Digest, nil
@@ -158,7 +161,8 @@ type PullProgress struct {
 }
 
 func (c *RegistryClient) downloadLayer(ref Reference, token, digest, destDir string, progress func(PullProgress)) error {
-	// Check if already cached
+	
+
 	layerDir := filepath.Join(destDir, strings.ReplaceAll(digest, ":", "-"))
 	if _, err := os.Stat(layerDir); err == nil {
 		return nil
@@ -227,12 +231,14 @@ func extractLayer(r io.Reader, dest string) error {
 			return err
 		}
 
-		// Handle whiteout files
+		
+
 		base := filepath.Base(hdr.Name)
 		dir := filepath.Dir(hdr.Name)
 
 		if strings.HasPrefix(base, ".wh..wh..opq") {
-			// Opaque whiteout - remove all in dir
+			
+
 			target := filepath.Join(dest, dir)
 			entries, _ := os.ReadDir(target)
 			for _, e := range entries {
@@ -241,14 +247,16 @@ func extractLayer(r io.Reader, dest string) error {
 			continue
 		}
 		if strings.HasPrefix(base, ".wh.") {
-			// Whiteout - remove specific file
+			
+
 			target := filepath.Join(dest, dir, strings.TrimPrefix(base, ".wh."))
 			os.RemoveAll(target)
 			continue
 		}
 
 		target := filepath.Join(dest, hdr.Name)
-		// Prevent path traversal
+		
+
 		if !strings.HasPrefix(filepath.Clean(target), filepath.Clean(dest)) {
 			continue
 		}
@@ -274,11 +282,13 @@ func extractLayer(r io.Reader, dest string) error {
 			os.Remove(target)
 			os.Link(linkTarget, target)
 		case tar.TypeChar, tar.TypeBlock:
-			// Skip device files in non-root mode
+			
+
 			continue
 		case tar.TypeFifo:
 			os.MkdirAll(filepath.Dir(target), 0755)
-			// Skip FIFOs
+			
+
 		}
 	}
 	return nil
@@ -300,7 +310,6 @@ func (p *progressReader) Read(b []byte) (int, error) {
 	return n, err
 }
 
-// Pull pulls an image and returns it
 func (c *RegistryClient) Pull(rawRef string, imagesDir string, progress func(PullProgress)) (*Image, *ImageConfigFile, []string, error) {
 	ref := ParseReference(rawRef)
 	scope := fmt.Sprintf("repository:%s:pull", ref.Name)
@@ -333,7 +342,7 @@ func (c *RegistryClient) Pull(rawRef string, imagesDir string, progress func(Pul
 	}
 
 	imgID := strings.TrimPrefix(manifest.Config.Digest, "sha256:")
-	// keep full imgID (no truncation needed here)
+	
 
 	var size int64
 	for _, l := range manifest.Layers {

@@ -37,8 +37,6 @@ func New() *Handlers {
 	}
 }
 
-// ---- System ----
-
 func (h *Handlers) Ping(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(200)
@@ -101,8 +99,6 @@ func (h *Handlers) Info(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// ---- Containers ----
-
 func (h *Handlers) ContainerList(w http.ResponseWriter, r *http.Request) {
 	all := r.URL.Query().Get("all") == "1" || r.URL.Query().Get("all") == "true"
 	containers, err := h.containers.List(all)
@@ -110,7 +106,8 @@ func (h *Handlers) ContainerList(w http.ResponseWriter, r *http.Request) {
 		writeError(w, 500, err.Error())
 		return
 	}
-	// Refresh running state
+	
+
 	for _, c := range containers {
 		if c.State.Running {
 			pid := rt.GetPID(c.ID)
@@ -167,7 +164,8 @@ func (h *Handlers) ContainerStart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Setup rootfs if needed
+	
+
 	if !hasRootfs(c.RootfsPath) {
 		img, err := h.images.Get(c.Config.Image)
 		if err != nil {
@@ -193,7 +191,8 @@ func (h *Handlers) ContainerStart(w http.ResponseWriter, r *http.Request) {
 		c.State.StartedAt = time.Now()
 	})
 
-	// Watch in background
+	
+
 	go func() {
 		proc.Wait()
 		h.containers.UpdateState(c.ID, func(c *container.Container) {
@@ -244,7 +243,8 @@ func (h *Handlers) ContainerRestart(w http.ResponseWriter, r *http.Request) {
 	if c.State.Running {
 		rt.Stop(c, syscall.SIGTERM, 10)
 	}
-	// Re-use ContainerStart logic
+	
+
 	h.containers.UpdateState(c.ID, func(c *container.Container) {
 		c.State.Running = false
 		c.State.Status = container.StatusStopped
@@ -350,7 +350,8 @@ func tailFile(w io.Writer, f *os.File, n int) {
 	if size == 0 {
 		return
 	}
-	// Simple approach: read all, take last n lines
+	
+
 	b, err := io.ReadAll(f)
 	if err != nil {
 		return
@@ -473,8 +474,6 @@ func (h *Handlers) ContainerChanges(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, 200, []any{})
 }
 
-// ---- Images ----
-
 func (h *Handlers) ImageList(w http.ResponseWriter, r *http.Request) {
 	images, err := h.images.List()
 	if err != nil {
@@ -569,8 +568,6 @@ func (h *Handlers) ImageSearch(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, 200, []any{})
 }
 
-// ---- Networks ----
-
 func (h *Handlers) NetworkList(w http.ResponseWriter, r *http.Request) {
 	networks, err := h.networks.List()
 	if err != nil {
@@ -627,8 +624,6 @@ func (h *Handlers) NetworkConnect(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) NetworkDisconnect(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(200)
 }
-
-// ---- Volumes ----
 
 func (h *Handlers) VolumeList(w http.ResponseWriter, r *http.Request) {
 	volumes, err := h.volumes.List()
@@ -687,11 +682,10 @@ func (h *Handlers) VolumePrune(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// ---- Helpers ----
-
 func pathParam(r *http.Request, key string) string {
 	path := r.URL.Path
-	// Strip version prefix
+	
+
 	if len(path) > 4 && path[0] == '/' {
 		parts := strings.SplitN(path[1:], "/", 2)
 		if len(parts) == 2 && (strings.HasPrefix(parts[0], "v1.") || strings.HasPrefix(parts[0], "v2.")) {
@@ -699,8 +693,10 @@ func pathParam(r *http.Request, key string) string {
 		}
 	}
 	parts := strings.Split(strings.Trim(path, "/"), "/")
-	// Find {key} position pattern from known routes
-	// Simple: take the segment after the resource type
+	
+
+	
+
 	if key == "id" || key == "name" {
 		if len(parts) >= 2 {
 			return parts[1]
@@ -720,7 +716,8 @@ func writeError(w http.ResponseWriter, code int, msg string) {
 }
 
 func hasRootfs(path string) bool {
-	// Check if rootfs has at least /bin or /usr
+	
+
 	_, err1 := os.Stat(filepath.Join(path, "bin"))
 	_, err2 := os.Stat(filepath.Join(path, "usr"))
 	return err1 == nil || err2 == nil
