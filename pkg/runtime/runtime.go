@@ -726,9 +726,33 @@ func writeUIDMaps(pid, uid, gid int, uidMaps, gidMaps []syscall.SysProcIDMap) er
 	return nil
 }
 
+// findProot locates the proot binary.  exec.LookPath only searches PATH, which
+// is often minimal inside proot environments.  We also probe the most common
+// installation prefixes so that a freshly-installed proot is always found.
+func findProot() string {
+	// Fast path: honour PATH if the caller set it correctly.
+	if p, err := exec.LookPath("proot"); err == nil {
+		return p
+	}
+	// Slow path: check well-known locations that apt/yum/pacman use.
+	for _, candidate := range []string{
+		"/usr/bin/proot",
+		"/usr/local/bin/proot",
+		"/bin/proot",
+		"/sbin/proot",
+		"/usr/sbin/proot",
+		"/data/data/com.termux/files/usr/bin/proot",
+	} {
+		if _, err := os.Stat(candidate); err == nil {
+			return candidate
+		}
+	}
+	return ""
+}
+
 func StartWithProot(c *container.Container, opts RunOptions) (*os.Process, error) {
-	prootBin, err := exec.LookPath("proot")
-	if err != nil {
+	prootBin := findProot()
+	if prootBin == "" {
 		// proot binary not found.  Do NOT fall back to Start — that would
 		// create infinite mutual recursion when namespaces are unavailable.
 		return nil, fmt.Errorf("proot not found in PATH and kernel namespaces are unavailable; " +
