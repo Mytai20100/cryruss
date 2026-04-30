@@ -20,6 +20,19 @@ import (
 
 const InitArg = "__cryruss_init__"
 
+// IsRestrictedKernel returns true when running inside proot, a user-mode
+// Linux environment, or any other context where namespace syscalls (unshare /
+// clone with CLONE_NEW*) are not permitted.  It probes by attempting an
+// unshare that should always be cheap to reverse.
+func IsRestrictedKernel() bool {
+	// Try CLONE_NEWUTS — the least-invasive namespace to probe with.
+	// In a real kernel with user-namespaces enabled this succeeds silently
+	// (we are in a new UTS namespace for just this goroutine-OS-thread, and
+	// Go's runtime will re-exec anyway).  In proot/chroot it returns EINVAL.
+	err := syscall.Unshare(syscall.CLONE_NEWUTS)
+	return err != nil
+}
+
 type InitConfig struct {
 	Rootfs      string       `json:"Rootfs"`
 	Args        []string     `json:"Args"`
@@ -62,8 +75,14 @@ func ContainerInit() {
 		syscall.CLONE_NEWPID | syscall.CLONE_NEWUTS | syscall.CLONE_NEWIPC
 
 	if err := syscall.Unshare(defaultFlags); err != nil {
-		fmt.Fprintf(os.Stderr, "init: unshare: %v\n", err)
-		os.Exit(127)
+		// Namespace creation failed (e.g. running inside proot).
+		// Try a minimal unshare — just mount namespace — so we can still
+		// pivot_root / chroot safely.  If even that fails, continue without
+		// any namespace isolation (chroot-only mode).
+		if err2 := syscall.Unshare(syscall.CLONE_NEWNS); err2 != nil {
+			// Completely restricted — proceed with chroot-only isolation.
+			fmt.Fprintf(os.Stderr, "init: warning: namespace isolation unavailable (%v), using chroot-only mode\n", err)
+		}
 	}
 
 	
@@ -510,6 +529,13 @@ func readSubIDRange(file string, id int) (int, int) {
 }
 
 func Start(c *container.Container, opts RunOptions) (*os.Process, error) {
+	// Auto-detect restricted environments (proot, unprivileged chroot, etc.)
+	// where kernel namespace creation is not allowed.  Fall back to proot mode
+	// transparently so the user does not need to pass --proot explicitly.
+	if IsRestrictedKernel() {
+		return StartWithProot(c, opts)
+	}
+
 	args := resolveArgs(c)
 	initCfg := &InitConfig{
 		Rootfs:      c.RootfsPath,
