@@ -528,14 +528,19 @@ func readSubIDRange(file string, id int) (int, int) {
 	return bestStart, bestCount
 }
 
+// Start launches a container.  In restricted kernel environments (proot,
+// unprivileged chroot, …) where namespace syscalls are blocked it delegates
+// transparently to StartWithProot so callers need no special flags.
 func Start(c *container.Container, opts RunOptions) (*os.Process, error) {
-	// Auto-detect restricted environments (proot, unprivileged chroot, etc.)
-	// where kernel namespace creation is not allowed.  Fall back to proot mode
-	// transparently so the user does not need to pass --proot explicitly.
 	if IsRestrictedKernel() {
 		return StartWithProot(c, opts)
 	}
+	return startNative(c, opts)
+}
 
+// startNative is the real namespace-based launcher.  It must never call
+// StartWithProot — that would create infinite mutual recursion.
+func startNative(c *container.Container, opts RunOptions) (*os.Process, error) {
 	args := resolveArgs(c)
 	initCfg := &InitConfig{
 		Rootfs:      c.RootfsPath,
@@ -724,8 +729,10 @@ func writeUIDMaps(pid, uid, gid int, uidMaps, gidMaps []syscall.SysProcIDMap) er
 func StartWithProot(c *container.Container, opts RunOptions) (*os.Process, error) {
 	prootBin, err := exec.LookPath("proot")
 	if err != nil {
-		return Start(c, opts) 
-
+		// proot binary not found.  Do NOT fall back to Start — that would
+		// create infinite mutual recursion when namespaces are unavailable.
+		return nil, fmt.Errorf("proot not found in PATH and kernel namespaces are unavailable; " +
+			"install proot (e.g. 'apt install proot') to run containers in this environment")
 	}
 
 	args := resolveArgs(c)
